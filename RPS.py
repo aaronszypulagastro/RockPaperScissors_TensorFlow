@@ -1,35 +1,41 @@
-# The example function below keeps track of the opponent's history
-# and plays whatever the opponent played two plays ago.
-# It is not a very good player so you will need to change
-# the code to pass the challenge.
-from typing import Literal
-from random import choice
+import random
 
-Hand = Literal["R", "P", "S", ""]
+# Diese Funktion wählt den Zug des Spielers basierend auf dem letzten Zug (prev_play)
+# und der Historie der Züge. Sie soll versuchen, den Gegner vorherzusagen.
+def player(prev_play, opponent_history=[]):
+    # Wenn es keinen vorherigen Zug gibt, wird ein zufälliger gewählt
+    if prev_play:
+        opponent_history.append(prev_play)
 
+    # Standardmäßig wird "R" (Rock) gespielt, wenn keine Strategie erkennbar ist
+    guess = "R"
 
-def player(prev_play: Hand, opponent_history: list[Hand] = []) -> Hand:
-    return ""
+    # Wenn die Historie mindestens 3 Züge enthält, versuchen wir Muster zu finden
+    if len(opponent_history) > 3:
+        # Wir nehmen die letzten drei Züge des Gegners
+        last_three = opponent_history[-3:]
+        
+        # Wir erstellen ein Dictionary, das mögliche Folgen zählt
+        possible = [
+            opponent_history[i:i+3]
+            for i in range(len(opponent_history)-3)
+        ]
 
+        # Wir schauen, wie oft die letzten drei Züge schon vorkamen
+        occurrences = {}
+        for i, seq in enumerate(possible):
+            if seq == last_three:
+                next_index = i + 3
+                if next_index < len(opponent_history):
+                    next_move = opponent_history[next_index]
+                    occurrences[next_move] = occurrences.get(next_move, 0) + 1
 
-def oneMemoryPlayer(prev_play: Hand, opponent_history: list[Hand] = []) -> Hand:
-    """
-    simply try to beat the opponent's hand just before
-    Its scores are: 50, 50, 84, 100
-    """
-    opponent_history.append(prev_play)
-    guess = opponent_history[-1]
-    return oppose(guess)
+        # Wenn wir Vorkommen gefunden haben, nehmen wir den häufigsten nächsten Zug an
+        if occurrences:
+            prediction = max(occurrences, key=occurrences.get)
+            
+            # Wir wählen den Zug, der den vorhergesagten Zug schlägt
+            ideal_response = {"R": "P", "P": "S", "S": "R"}
+            guess = ideal_response[prediction]
 
-
-def oppose(hand: Hand) -> Hand:
-    """ "
-    When given a hand, return the winning hand
-    """
-    if hand == "P":
-        return "S"
-    elif hand == "R":
-        return "P"
-    elif hand == "S":
-        return "R"
-    return choice(["R", "P", "S"])
+    return guess
